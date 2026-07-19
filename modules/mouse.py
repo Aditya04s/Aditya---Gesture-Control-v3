@@ -18,6 +18,10 @@ class MouseController:
         # Retrieve the monitor's pixel dimensions
         self.screen_w, self.screen_h = pyautogui.size()
         
+        # NEW: Active Control Region (ACR) Configurations
+        self.margin_x = 0.15  # 15% horizontal margin (Left & Right)
+        self.margin_y = 0.15  # 15% vertical margin (Top & Bottom)
+        
         # Thread communication variables
         self.target_x = None
         self.target_y = None
@@ -29,32 +33,52 @@ class MouseController:
         self.mouse_thread.start()
 
     def move(self, hand_landmarks):
-        """Calculates normalized screen coords and updates target position."""
-        # Tracking the Index Finger Tip (Landmark 8) for pointer positioning
+        """Calculates normalized screen coords within the ACR and updates target position."""
         index_tip = hand_landmarks[8]
         
-        # Map normalized landmarks (0.0 to 1.0) out to absolute screen pixels
-        self.target_x = int(index_tip.x * self.screen_w)
-        self.target_y = int(index_tip.y * self.screen_h)
+        # 1. Define the active tracking boundaries (0.0 to 1.0 space)
+        active_x_start = self.margin_x
+        active_x_end = 1.0 - self.margin_x
+        active_y_start = self.margin_y
+        active_y_end = 1.0 - self.margin_y
 
+        # 2. Normalize the coordinates strictly within the ACR
+        mapped_x = (index_tip.x - active_x_start) / (active_x_end - active_x_start)
+        mapped_y = (index_tip.y - active_y_start) / (active_y_end - active_y_start)
+
+        # 3. Clamp values to prevent overshooting the screen edges
+        # If the finger leaves the ACR, the cursor simply hugs the edge of the monitor.
+        mapped_x = max(0.0, min(1.0, mapped_x))
+        mapped_y = max(0.0, min(1.0, mapped_y))
+
+        # 4. Map directly to absolute screen pixels
+        self.target_x = int(mapped_x * self.screen_w)
+        self.target_y = int(mapped_y * self.screen_h)
+        
     def click(self):
-        """Triggers a virtual primary click safely on the automation background layer."""
-        # Using moveTo/click coords directly avoids thread contention blocks
+        """Triggers a virtual primary click."""
         if self.target_x is not None and self.target_y is not None:
             pyautogui.click(self.target_x, self.target_y)
 
+    def double_click(self):
+        """Triggers a rapid double-click."""
+        if self.target_x is not None and self.target_y is not None:
+            pyautogui.doubleClick(self.target_x, self.target_y)
+
     def drag(self):
-        """Instructs the background loop thread to engage hold lock state."""
-        self.is_dragging = True
+        """Fires the OS mouse-down event once to initiate a drag."""
+        if not self.is_dragging:
+            self.is_dragging = True
+            pyautogui.mouseDown(button='left')
 
     def drag_move(self, hand_landmarks):
         """Updates targeted coordinates while drag lock states stay active."""
         self.move(hand_landmarks)
 
     def release(self):
-        """Safely signals background thread to drop any dragging lock states down."""
+        """Fires the OS mouse-up event to release a drag lock safely."""
         if self.is_dragging:
-            pyautogui.mouseUp()
+            pyautogui.mouseUp(button='left')
             self.is_dragging = False
 
     def scroll(self, value):
@@ -74,22 +98,14 @@ class MouseController:
         last_x, last_y = pyautogui.position()
         
         while self.running:
-            # Check if main loop dropped a fresh destination point for us
             if self.target_x is not None and self.target_y is not None:
                 tx, ty = self.target_x, self.target_y
                 
-                # Only call hardware APIs if the tracking coordinates actually shifted
                 if tx != last_x or ty != last_y:
-                    if self.is_dragging:
-                        # Dragging requires mouse down active drag movements
-                        pyautogui.dragTo(tx, ty, button='left')
-                    else:
-                        # Standard pointer displacement tracking
-                        pyautogui.moveTo(tx, ty)
-                        
+                    # Because mouseDown is active, the OS automatically treats this as dragging
+                    pyautogui.moveTo(tx, ty)
                     last_x, last_y = tx, ty
             
-            # Constrain update ticks to roughly ~120Hz frequency limit to protect CPU usage
             time.sleep(0.008)
 
     def stop(self):

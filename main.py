@@ -55,14 +55,23 @@ def main():
                 mouse.move(hand)
                 last_scroll_y = None
 
+            # ----------------------------
+            # CLICK / DOUBLE CLICK
+            # ----------------------------
             elif gesture_name == "PINCH":
                 mouse.release()
                 mouse.click()
                 last_scroll_y = None
 
+            elif gesture_name == "DOUBLE_CLICK":
+                mouse.release()
+                mouse.double_click()
+                last_scroll_y = None
+
             elif gesture_name == "DRAG":
                 mouse.drag()
-                mouse.drag_move(hand)
+                # Use move() so it utilizes your Active Control Region (ACR) clamping!
+                mouse.move(hand) 
                 last_scroll_y = None
 
             elif gesture_name == "SCROLL":
@@ -79,7 +88,13 @@ def main():
                 # NEW: Tell the state engine to trigger. It manages its own cooldown locks!
                 shot_manager.trigger()
                 last_scroll_y = None
+            
+            else:
+                # Handles "UNKNOWN" safety freezing
+                mouse.release()
+                last_scroll_y = None
         else:
+            # Handles "NO HAND" lost tracking
             mouse.release()
             last_scroll_y = None
 
@@ -115,6 +130,25 @@ def main():
                 "Screenshot Saved!", 
                 (380, 650), cv2.FONT_HERSHEY_SIMPLEX, 1.5, (0, 255, 0), 3
             )
+
+        # =====================================================================
+        # ACTIVE CONTROL REGION (ACR) DEBUG RENDERER
+        # =====================================================================
+        # Get current frame dimensions dynamically
+        h, w, c = frame.shape
+        
+        # Calculate pixel coordinates for the ACR bounds using the mouse config
+        margin_x_px = int(w * mouse.margin_x)
+        margin_y_px = int(h * mouse.margin_y)
+        
+        # Draw a yellow rectangle to visualize the active tracking area
+        cv2.rectangle(
+            frame, 
+            (margin_x_px, margin_y_px), 
+            (w - margin_x_px, h - margin_y_px), 
+            (0, 255, 255), 
+            2
+        )
 
         ui.draw(frame, fps, gesture_name, confidence, "NORMAL")
         cv2.imshow("AI Gesture Experience", frame)
