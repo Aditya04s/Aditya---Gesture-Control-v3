@@ -55,7 +55,31 @@ class HandDetector:
         # -----------------------------
         # CAMERA
         # -----------------------------
+        # self.cap = cv2.VideoCapture(0)
+        
+        # 1. Initialize the camera
         self.cap = cv2.VideoCapture(0)
+        
+        # 2. Define target resolutions (Highest to lowest fallback)
+        target_resolutions = [
+            (1920, 1080),
+            (1280, 720),
+            (960, 540),
+            (640, 480)
+        ]
+        
+        # 3. Hunt for the highest supported native resolution
+        for width, height in target_resolutions:
+            self.cap.set(cv2.CAP_PROP_FRAME_WIDTH, width)
+            self.cap.set(cv2.CAP_PROP_FRAME_HEIGHT, height)
+            
+            # Read back from the driver to confirm if the setting was accepted
+            actual_w = self.cap.get(cv2.CAP_PROP_FRAME_WIDTH)
+            actual_h = self.cap.get(cv2.CAP_PROP_FRAME_HEIGHT)
+            
+            if actual_w == width and actual_h == height:
+                print(f"\n[Camera] Hardware locked at native resolution: {int(actual_w)}x{int(actual_h)}")
+                break
 
         # Camera Resolution
         self.cap.set(cv2.CAP_PROP_FRAME_WIDTH, 1280)
