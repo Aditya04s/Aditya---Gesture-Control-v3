@@ -80,7 +80,18 @@ class HandDetector:
             if actual_w == width and actual_h == height:
                 print(f"\n[Camera] Hardware locked at native resolution: {int(actual_w)}x{int(actual_h)}")
                 break
-
+        # =====================================================================
+        # 4. NEW: FPS NEGOTIATION
+        # =====================================================================
+        # You can change this target anytime. 60 is the golden standard for smooth tracking.
+        self.target_fps = 120
+        
+        # Ask the camera driver to run at the target speed
+        self.cap.set(cv2.CAP_PROP_FPS, self.target_fps)
+        
+        # Read back what the hardware actually allowed us to use safely
+        actual_fps = self.cap.get(cv2.CAP_PROP_FPS)
+        print(f"[Camera] Hardware FPS negotiated and locked at: {actual_fps}")
         # Camera Resolution
         self.cap.set(cv2.CAP_PROP_FRAME_WIDTH, 1280)
         self.cap.set(cv2.CAP_PROP_FRAME_HEIGHT, 720)

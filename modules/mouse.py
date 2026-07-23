@@ -9,7 +9,7 @@ import time
 import pyautogui
 
 # Safety fallback configurations for PyAutoGUI automation
-pyautogui.FAILSAFE = True
+pyautogui.FAILSAFE = False
 pyautogui.PAUSE = 0.0  # Wipes out default 0.1s UI locking lag completely!
 
 
