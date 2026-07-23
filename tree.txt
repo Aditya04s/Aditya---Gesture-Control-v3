@@ -1,8 +1,11 @@
 Folder PATH listing
-Volume serial number is 000000E9 E2B7:19EF
+
 C:.
+¦   .gitignore
 ¦   main.py
+¦   requirements.txt
 ¦   tree
+¦   tree.txt
 ¦   
 +---.venv
 ¦   ¦   .gitignore
@@ -6267,6 +6270,7 @@ C:.
 ¦   ¦   presentation.py
 ¦   ¦   renderer.py
 ¦   ¦   screenshot.py
+¦   ¦   scroll.py
 ¦   ¦   stability.py
 ¦   ¦   stats.py
 ¦   ¦   ui.py
@@ -6289,17 +6293,16 @@ C:.
 ¦           renderer.cpython-312.pyc
 ¦           renderer.cpython-314.pyc
 ¦           screenshot.cpython-314.pyc
+¦           scroll.cpython-314.pyc
 ¦           stability.cpython-312.pyc
 ¦           ui.cpython-312.pyc
 ¦           ui.cpython-314.pyc
 ¦           worker.cpython-314.pyc
 ¦           
 +---screenshots
-        20260718_140029.png
-        20260718_140057.png
-        20260718_140105.png
-        20260718_140318.png
-        20260718_191722.png
-        20260718_192121.png
-        20260718_192124.png
+        20260723_121503.png
+        20260723_121613.png
+        20260723_162118.png
+        20260723_162214.png
+        20260723_162248.png
         
